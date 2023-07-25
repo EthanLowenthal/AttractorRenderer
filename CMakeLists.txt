@@ -7,9 +7,9 @@ set(CMAKE_CXX_STANDARD 23)
 add_subdirectory("libs")
 
 
-#add_executable(AttractorRenderer main.cpp)
-add_executable(AttractorRenderer)
-target_sources(AttractorRenderer PUBLIC ${CMAKE_SOURCE_DIR}/libs/imgui/examples/example_sdl3_opengl3/main.cpp)
+add_executable(AttractorRenderer main.cpp Window.h)
+#add_executable(AttractorRenderer)
+#target_sources(AttractorRenderer PUBLIC ${CMAKE_SOURCE_DIR}/libs/imgui/examples/example_sdl3_opengl3/main.cpp)
 
 target_link_libraries(AttractorRenderer IMGUI)
 set_target_properties(AttractorRenderer PROPERTIES RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR})

@@ -67,7 +67,7 @@ struct Attractor {
 
             unsigned val = map.get(plot.x, plot.y) + 1;
 
-            if (val > max_exposure) max_exposure = c;
+            if (val > max_exposure) max_exposure = val;
 
             map.set(plot.x, plot.y, val);
         }

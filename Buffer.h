@@ -9,6 +9,8 @@
 
 template<typename T>
 struct Buffer {
+    std::vector<T> array;
+
     Buffer(int width, int height) : m_width{width}, m_height{height} {
         array.resize(width * height);
     }
@@ -16,7 +18,7 @@ struct Buffer {
         return array.at(x + y * m_width);
     }
     inline void set(int x, int y, T val) {
-        array.at(x + y * m_width) = val;
+        array[x + y * m_width] = val;
     }
     int width() {
         return m_width;
@@ -26,6 +28,5 @@ struct Buffer {
     }
     private:
         int m_width, m_height;
-        std::vector<T> array;
 };
 #endif //ATTRACTORRENDERER_BUFFER_H

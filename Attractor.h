@@ -22,9 +22,9 @@ Point<float> clifford(Point<float> p, float a, float b, float c, float d) {
 
 struct Attractor {
     Buffer<unsigned> map { 1000, 1000 };
-    Buffer<float> image { 1000, 1000 };
+    Buffer<unsigned char> image { 1000 * 3, 1000 };
 
-    int iterations { 1000 };
+    int iterations { 1000000 };
 
     int max_exposure { 0 };
 
@@ -39,8 +39,8 @@ struct Attractor {
     void iterate() {
         Point<float> p { 0, 0 };
 
-        Point<float> tr {1,1};
-        Point<float> bl {-1, -1};
+        Point<float> tr {2,2};
+        Point<float> bl {-2, -2};
 
         Point<float> scale {
                 (map.width() - 1) / (tr.x - bl.x),
@@ -55,8 +55,8 @@ struct Attractor {
             p = clifford(p, a, b, c, d);
 
             Point<int> plot = {
-                    static_cast<int>((floor((p.x - bl.x) * scale.x))),
-                    static_cast<int>((floor((p.y - bl.y) * scale.y)))
+                    static_cast<int>((floor((-p.x - bl.x) * scale.x))),
+                    static_cast<int>((floor((-p.y - bl.y) * scale.y)))
             };
 
             plot = {
@@ -65,11 +65,11 @@ struct Attractor {
             };
 
 
-            auto c = map.get(plot.x, plot.y) + 1;
+            unsigned val = map.get(plot.x, plot.y) + 1;
 
-            if (c > max_exposure) max_exposure = c;
+            if (val > max_exposure) max_exposure = c;
 
-            map.set(plot.x, plot.y, c);
+            map.set(plot.x, plot.y, val);
         }
     }
 
@@ -78,10 +78,12 @@ struct Attractor {
             for(int y=0;y<map.height();y++) {
                 auto val = static_cast<float>(map.get(x, y)) / static_cast<float>(max_exposure);
 
-                val = pow(val, 1.0 / gamma);
+//                val = pow(val, 1.0 / gamma);
                 val = std::max(0.0f, std::min(1.0f, val));
 
-                image.set(x, y, val);
+                image.set(3 * x + 0, y, val * 255.0);
+                image.set(3 * x + 1, y, val * 255.0);
+                image.set(3 * x + 2, y, val * 255.0);
             }
         }
     }

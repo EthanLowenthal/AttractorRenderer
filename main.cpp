@@ -1,5 +1,9 @@
 #include <iostream>
+#include <thread>
+
 #include "Window.h"
+#include "misc/cpp/imgui_stdlib.h"
+
 #include "Attractor.h"
 #include "Palette.h"
 
@@ -16,7 +20,7 @@ void redevelop(Attractor& a, GLuint tex) {
     a.develop();
 
     glBindTexture(GL_TEXTURE_2D, tex);
-    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, a.map.width(), a.map.height(), 0, GL_RGB, GL_UNSIGNED_BYTE, &a.image.array[0]);
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, a.map.width(), a.map.height(), 0, GL_RGBA, GL_UNSIGNED_BYTE, &a.image.array[0]);
 }
 int main() {
     Window window {};
@@ -39,14 +43,19 @@ int main() {
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
 
+    int progress {0};
 
     Attractor attractor {};
-    attractor.iterate();
+    attractor.iterate(progress);
     redevelop(attractor, image_texture);
 
     regen_palette(attractor, palette_texture);
 
     bool done = false;
+
+    bool lock_palette[4] = {true, true, true, true};
+    std::string filename {"out"};
+
 
     while (!done) {
         SDL_Event event;
@@ -71,26 +80,61 @@ int main() {
             ImGui::InputInt("iterations", &attractor.iterations);
             ImGui::SameLine();
             if (ImGui::Button("Iterate")) {
-                attractor.iterate();
-                redevelop(attractor, image_texture);
+                progress = 0;
+                std::thread iterate_thread (&Attractor::iterate, std::ref(attractor), std::ref(progress));
+                iterate_thread.detach();
             }
             ImGui::SameLine();
             if (ImGui::Button("Develop")) {
                 redevelop(attractor, image_texture);
             }
 
+            ImGui::ProgressBar(static_cast<float>(progress)/attractor.iterations);
             ImGui::Separator();
 
             if(ImGui::CollapsingHeader("Palette")) {
-                ImGui::Image((void*)(intptr_t)palette_texture, ImVec2(400, 100));
+                ImGui::Image((void *) (intptr_t) palette_texture, ImVec2(400, 100));
+
+
+                for (int i=0;i<4;i++) {
+                    for (int j=0;j<3;j++) {
+                        ImGui::PushID(j*10+i);
+                        if (ImGui::VSliderFloat("##v", ImVec2(18, 100), &attractor.palette[i][j], 0, 1, "")) {
+                            if (lock_palette[i]) {
+                                attractor.palette[i].x = attractor.palette[i][j];
+                                attractor.palette[i].y = attractor.palette[i][j];
+                                attractor.palette[i].z = attractor.palette[i][j];
+                            }
+                            regen_palette(attractor, palette_texture);
+                        }
+                        ImGui::PopID();
+                        ImGui::SameLine();
+                    }
+                    ImGui::PushID(i*100);
+                    ImGui::Checkbox("lock", &lock_palette[i]);
+                    ImGui::PopID();
+                    ImGui::SameLine();
+
+                }
+                ImGui::NewLine();
             }
 
-            if(ImGui::CollapsingHeader("Mapping")) {
-                ImGui::Text("map");
+            if(ImGui::CollapsingHeader("Map")) {
+                if(ImGui::SliderFloat("gamma", &attractor.gamma, 0.0, 15.0))
+                    redevelop(attractor, image_texture);
+                if(ImGui::SliderFloat("exposure", &attractor.exposure, 0.0, 1.0))
+                    redevelop(attractor, image_texture);
             }
 
             if(ImGui::CollapsingHeader("Save")) {
-                ImGui::Text("save");
+                ImGui::InputText("filename", &filename);
+                ImGui::SameLine();
+                ImGui::Text(".png");
+                ImGui::SameLine();
+                if(ImGui::Button("Write")) {
+                    redevelop(attractor, image_texture);
+                    attractor.save(filename);
+                }
             }
 
             ImGui::End();

@@ -11,13 +11,22 @@
 
 struct Palette {
     vec3<float> a, b, c, d;
+    vec3<float>& operator[](int index) {
+        switch (index) {
+            case 0: return a;
+            case 1: return b;
+            case 2: return c;
+            case 3: return d;
+            default: throw std::out_of_range("Invalid index in palette");
+        }
+    }
 };
 
 vec3<double> get_color(float t, Palette& p) {
     return {
-        p.a.x + p.b.x * std::cos( 6.28318 * (p.c.x * t + p.d.x)),
-        p.a.y + p.b.y * std::cos( 6.28318 * (p.c.y * t + p.d.y)),
-        p.a.z + p.b.z * std::cos( 6.28318 * (p.c.z * t + p.d.z))
+        std::clamp(p.a.x + p.b.x * std::cos( 6.28318 * (p.c.x * t + p.d.x)), 0.0, 1.0),
+        std::clamp(p.a.y + p.b.y * std::cos( 6.28318 * (p.c.y * t + p.d.y)), 0.0, 1.0),
+        std::clamp(p.a.z + p.b.z * std::cos( 6.28318 * (p.c.z * t + p.d.z)), 0.0, 1.0)
     };
 }
 

@@ -26,6 +26,9 @@ struct Buffer {
     int height() {
         return m_height;
     }
+    void fill(T v) {
+        std::fill(array.begin(), array.end(), v);
+    }
     private:
         int m_width, m_height;
 };

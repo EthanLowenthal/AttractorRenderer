@@ -6,6 +6,8 @@
 #define ATTRACTORRENDERER_ATTRACTOR_H
 
 #include <cmath>
+
+#include "lodepng.h"
 #include "vector.h"
 #include "Palette.h"
 #include "Buffer.h"
@@ -19,7 +21,7 @@ vec2<float> clifford(vec2<float> p, float a, float b, float c, float d) {
 
 struct Attractor {
     Buffer<unsigned> map { 1000, 1000 };
-    Buffer<unsigned char> image { 1000 * 3, 1000 };
+    Buffer<unsigned char> image { 1000 * 4, 1000 };
 
     int iterations { 1000000 };
 
@@ -40,7 +42,7 @@ struct Attractor {
     float c = 1.0;
     float d = 0.7;
 
-    void iterate() {
+    void iterate(int &progress) {
         vec2<float> p { 0, 0 };
 
         vec2<float> tr {2,2};
@@ -51,9 +53,12 @@ struct Attractor {
                 (map.height() - 1) / (tr.y - bl.y),
         };
 
+        map.fill(0);
+
         max_exposure = 0;
 
         for (int i=0;i<iterations;i++) {
+            progress++;
 //            if (log) { if (i % reset == 0) std::cout << "." << std::flush; }
 
             p = clifford(p, a, b, c, d);
@@ -82,16 +87,25 @@ struct Attractor {
             for(int y=0;y<map.height();y++) {
                 auto val = static_cast<float>(map.get(x, y)) / static_cast<float>(max_exposure);
 
+                val *= exposure;
                 val = pow(val, 1.0 / gamma);
                 val = std::max(0.0f, std::min(1.0f, val));
 
                 auto color = get_color(val, palette);
 
-                image.set(3 * x + 0, y, color.x * 255.0);
-                image.set(3 * x + 1, y, color.y * 255.0);
-                image.set(3 * x + 2, y, color.z * 255.0);
+                image.set(4 * x + 0, y, color.x * 255.0);
+                image.set(4 * x + 1, y, color.y * 255.0);
+                image.set(4 * x + 2, y, color.z * 255.0);
+                image.set(4 * x + 3, y, 255.0);
             }
         }
+    }
+
+    void save(const std::string& filename) {
+        unsigned error = lodepng::encode(filename + ".png", &image.array[0], map.width(), map.height());
+
+        //if there's an error, display it
+        if(error) std::cout << "encoder error " << error << ": "<< lodepng_error_text(error) << std::endl;
     }
 
 };

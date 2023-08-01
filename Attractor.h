@@ -22,6 +22,12 @@ vec2<float> clifford(vec2<float> p, float a, float b, float c, float d) {
 struct Attractor {
     Buffer<unsigned> map { 1000, 1000 };
     Buffer<unsigned char> image { 1000 * 4, 1000 };
+    vec2<vec2<float>> bounds {
+            {-2,2},
+            {-2, 2}
+    };
+
+    vec2<vec2<float>> rendered_bounds = bounds;
 
     int iterations { 1000000 };
 
@@ -45,12 +51,9 @@ struct Attractor {
     void iterate(int &progress) {
         vec2<float> p { 0, 0 };
 
-        vec2<float> tr {2,2};
-        vec2<float> bl {-2, -2};
-
         vec2<float> scale {
-                (map.width() - 1) / (tr.x - bl.x),
-                (map.height() - 1) / (tr.y - bl.y),
+                (map.width() - 1) / (bounds.x[1] - bounds.x[0]),
+                (map.height() - 1) / (bounds.y[1] - bounds.y[0]),
         };
 
         map.fill(0);
@@ -64,8 +67,8 @@ struct Attractor {
             p = clifford(p, a, b, c, d);
 
             vec2<int> plot = {
-                    static_cast<int>((floor((-p.x - bl.x) * scale.x))),
-                    static_cast<int>((floor((-p.y - bl.y) * scale.y)))
+                    static_cast<int>((floor((-p.x - bounds.x[0]) * scale.x))),
+                    static_cast<int>((floor((-p.y - bounds.y[0]) * scale.y)))
             };
 
             plot = {
@@ -80,6 +83,10 @@ struct Attractor {
 
             map.set(plot.x, plot.y, val);
         }
+
+        develop();
+
+        rendered_bounds = bounds;
     }
 
     void develop() {

@@ -31,8 +31,8 @@ int main() {
 
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_BORDER);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_BORDER);
 
     GLuint palette_texture;
     glGenTextures(1, &palette_texture);
@@ -40,8 +40,6 @@ int main() {
 
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
 
     int progress {0};
 
@@ -71,7 +69,26 @@ int main() {
         window.new_frame();
         {
             ImGui::Begin("Image");
-            ImGui::Image((void*)(intptr_t)image_texture, ImVec2(attractor.map.width(), attractor.map.height()));
+
+            ImVec2 display_min = ImVec2(10.0f, 10.0f);
+            ImVec2 display_size = ImVec2(100.0f, 200.0f);
+            ImVec2 texture_size = ImVec2(256.0f, 256.0f);
+            vec2<float> rendered_bounds_size = {
+                    attractor.rendered_bounds.x[1] - attractor.rendered_bounds.x[0],
+                    attractor.rendered_bounds.y[1] - attractor.rendered_bounds.y[0]
+            };
+            vec2<ImVec2> uv = {
+            {
+                    (attractor.bounds.x[0] - attractor.rendered_bounds.x[0]) / rendered_bounds_size.x,
+                    (attractor.bounds.y[0] - attractor.rendered_bounds.y[0]) / rendered_bounds_size.y
+                },
+            {
+                    (attractor.bounds.x[1] - attractor.rendered_bounds.x[0]) / rendered_bounds_size.x,
+                    (attractor.bounds.y[1] - attractor.rendered_bounds.y[0]) / rendered_bounds_size.y
+                },
+            };
+
+            ImGui::Image((void*)(intptr_t)image_texture, ImVec2(attractor.map.width(), attractor.map.height()), uv[0], uv[1]);
             ImGui::End();
         }
         {
@@ -124,12 +141,16 @@ int main() {
                     redevelop(attractor, image_texture);
                 if(ImGui::SliderFloat("exposure", &attractor.exposure, 0.0, 1.0))
                     redevelop(attractor, image_texture);
+
+
+                ImGui::Text("Bounds");
+                if(ImGui::SliderFloat2("x", &attractor.bounds.x[0], -5.0, 5.0));
+                if(ImGui::SliderFloat2("y", &attractor.bounds.y[0], -5.0, 5.0));
+//                    redevelop(attractor, image_texture);
             }
 
             if(ImGui::CollapsingHeader("Save")) {
-                ImGui::InputText("filename", &filename);
-                ImGui::SameLine();
-                ImGui::Text(".png");
+                ImGui::InputText(".png", &filename);
                 ImGui::SameLine();
                 if(ImGui::Button("Write")) {
                     redevelop(attractor, image_texture);

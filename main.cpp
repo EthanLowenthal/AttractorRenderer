@@ -20,7 +20,7 @@ void redevelop(Attractor& a, GLuint tex) {
     a.develop();
 
     glBindTexture(GL_TEXTURE_2D, tex);
-    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, a.map.width(), a.map.height(), 0, GL_RGBA, GL_UNSIGNED_BYTE, &a.image.array[0]);
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, a.size.x, a.size.y, 0, GL_RGBA, GL_UNSIGNED_BYTE, &a.image.array[0]);
 }
 int main() {
     Window window {};
@@ -70,9 +70,6 @@ int main() {
         {
             ImGui::Begin("Image");
 
-            ImVec2 display_min = ImVec2(10.0f, 10.0f);
-            ImVec2 display_size = ImVec2(100.0f, 200.0f);
-            ImVec2 texture_size = ImVec2(256.0f, 256.0f);
             vec2<float> rendered_bounds_size = {
                     attractor.rendered_bounds.x[1] - attractor.rendered_bounds.x[0],
                     attractor.rendered_bounds.y[1] - attractor.rendered_bounds.y[0]
@@ -88,7 +85,7 @@ int main() {
                 },
             };
 
-            ImGui::Image((void*)(intptr_t)image_texture, ImVec2(attractor.map.width(), attractor.map.height()), uv[0], uv[1]);
+            ImGui::Image((void*)(intptr_t)image_texture, ImVec2(attractor.size.x, attractor.size.y), uv[0], uv[1]);
             ImGui::End();
         }
         {
@@ -116,7 +113,7 @@ int main() {
                 for (int i=0;i<4;i++) {
                     for (int j=0;j<3;j++) {
                         ImGui::PushID(j*10+i);
-                        if (ImGui::VSliderFloat("##v", ImVec2(18, 100), &attractor.palette[i][j], 0, 1, "")) {
+                        if (ImGui::VSliderFloat("##v", ImVec2(18, 100), &attractor.palette[i][j], 0, 5, "")) {
                             if (lock_palette[i]) {
                                 attractor.palette[i].x = attractor.palette[i][j];
                                 attractor.palette[i].y = attractor.palette[i][j];
@@ -137,17 +134,45 @@ int main() {
             }
 
             if(ImGui::CollapsingHeader("Map")) {
+
+                ImVec2 start = ImGui::GetCursorPos();
+
+                ImGui::Image((void *) (intptr_t) palette_texture, ImVec2(400, 100));
+
+                ImGui::SetCursorPos(start);
+
+                ImGui::PlotHistogram("Histogram", &attractor.histogram.array[0], attractor.histogram.width(), 0, "", 0, attractor.histogram.max(), {400, 100});
+
                 if(ImGui::SliderFloat("gamma", &attractor.gamma, 0.0, 15.0))
                     redevelop(attractor, image_texture);
                 if(ImGui::SliderFloat("exposure", &attractor.exposure, 0.0, 1.0))
+                    redevelop(attractor, image_texture);
+                if(ImGui::SliderFloat("base", &attractor.base, 0.0, 15.0))
                     redevelop(attractor, image_texture);
 
 
                 ImGui::Text("Bounds");
                 if(ImGui::SliderFloat2("x", &attractor.bounds.x[0], -5.0, 5.0));
                 if(ImGui::SliderFloat2("y", &attractor.bounds.y[0], -5.0, 5.0));
+
+                ImGui::Text("Params");
+                if(ImGui::SliderFloat("a", &attractor.a, -2.0, 2.0));
+                if(ImGui::SliderFloat("b", &attractor.b, -2.0, 2.0));
+                if(ImGui::SliderFloat("c", &attractor.c, -2.0, 2.0));
+                if(ImGui::SliderFloat("d", &attractor.d, -2.0, 2.0));
+
 //                    redevelop(attractor, image_texture);
             }
+
+            if(ImGui::CollapsingHeader("Image")) {
+
+
+                if(ImGui::InputInt("supersample", &attractor.supersample));
+                if(ImGui::InputInt2("image size", &attractor.size[0]));
+
+//                    redevelop(attractor, image_texture);
+            }
+
 
             if(ImGui::CollapsingHeader("Save")) {
                 ImGui::InputText(".png", &filename);

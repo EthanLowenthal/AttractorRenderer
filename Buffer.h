@@ -14,6 +14,11 @@ struct Buffer {
     Buffer(int width, int height) : m_width{width}, m_height{height} {
         array.resize(width * height);
     }
+    void resize(int width, int height) {
+        m_width = width;
+        m_height = height;
+        array.resize(width * height);
+    }
     T get(int x, int y) {
         return array.at(x + y * m_width);
     }
@@ -28,6 +33,13 @@ struct Buffer {
     }
     void fill(T v) {
         std::fill(array.begin(), array.end(), v);
+    }
+    int max() {
+        int m = 0;
+        for (auto v:array) {
+            if (v > m) m = v;
+        }
+        return m;
     }
     private:
         int m_width, m_height;

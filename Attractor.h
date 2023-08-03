@@ -20,8 +20,13 @@ vec2<float> clifford(vec2<float> p, float a, float b, float c, float d) {
 }
 
 struct Attractor {
-    Buffer<unsigned> map { 1000, 1000 };
-    Buffer<unsigned char> image { 1000 * 4, 1000 };
+
+    int supersample { 2 };
+    vec2<int> size { 500, 500 };
+    Buffer<unsigned> map { size.x, size.y };
+    Buffer<unsigned char> image { size.x * 4, size.y };
+
+    Buffer<float> histogram { 200, 1 };
     vec2<vec2<float>> bounds {
             {-2,2},
             {-2, 2}
@@ -35,6 +40,7 @@ struct Attractor {
 
     float gamma {1.5};
     float exposure {0.8};
+    float base {3};
 
     Palette palette {
             {0.5, 0.5, 0.5},
@@ -51,12 +57,14 @@ struct Attractor {
     void iterate(int &progress) {
         vec2<float> p { 0, 0 };
 
+        map.resize(size.x * supersample, size.y * supersample);
+        map.fill(0);
+
         vec2<float> scale {
                 (map.width() - 1) / (bounds.x[1] - bounds.x[0]),
                 (map.height() - 1) / (bounds.y[1] - bounds.y[0]),
         };
 
-        map.fill(0);
 
         max_exposure = 0;
 
@@ -90,13 +98,25 @@ struct Attractor {
     }
 
     void develop() {
-        for(int x=0;x<map.width();x++) {
-            for(int y=0;y<map.height();y++) {
-                auto val = static_cast<float>(map.get(x, y)) / static_cast<float>(max_exposure);
+        histogram.fill(0);
+        image.resize(size.x * 4, size.y);
+        for(int x=0;x<size.x;x++) {
+            for(int y=0;y<size.y;y++) {
+                float val = 0;
+                for (int ix=0;ix<supersample;ix++) {
+                    for (int iy=0;iy<supersample;iy++) {
+                        val += map.get(supersample * x + ix, supersample * y + iy);
+                    }
+                }
+                val /= static_cast<float>(max_exposure) * supersample * supersample;
 
                 val *= exposure;
                 val = pow(val, 1.0 / gamma);
+//                val = std::log(val)/log(base) + 1;
                 val = std::max(0.0f, std::min(1.0f, val));
+
+                if (val > 0)
+                    histogram.set((histogram.width()-1) * val, 0, histogram.get((histogram.width()-1) * val, 0) + 1);
 
                 auto color = get_color(val, palette);
 
@@ -109,7 +129,7 @@ struct Attractor {
     }
 
     void save(const std::string& filename) {
-        unsigned error = lodepng::encode(filename + ".png", &image.array[0], map.width(), map.height());
+        unsigned error = lodepng::encode(filename + ".png", &image.array[0], size.x, size.y);
 
         //if there's an error, display it
         if(error) std::cout << "encoder error " << error << ": "<< lodepng_error_text(error) << std::endl;

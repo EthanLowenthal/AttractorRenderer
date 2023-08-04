@@ -6,6 +6,7 @@
 
 #include "Attractor.h"
 #include "Palette.h"
+#include "libs/ImGuiFileDialog/ImGuiFileDialog.h"
 
 void regen_palette(Attractor& a, GLuint tex) {
     int width = 400;
@@ -181,6 +182,22 @@ int main() {
                     redevelop(attractor, image_texture);
                     attractor.save(filename);
                 }
+
+                if (ImGui::Button("Open File"))
+                    ImGuiFileDialog::Instance()->OpenDialog("ChooseFileDlgKey", "Choose File", ".png", ".");
+
+                if (ImGuiFileDialog::Instance()->Display("ChooseFileDlgKey"))
+                {
+                    if (ImGuiFileDialog::Instance()->IsOk())
+                    {
+                        std::string filePathName = ImGuiFileDialog::Instance()->GetFilePathName();
+                        std::string filePath = ImGuiFileDialog::Instance()->GetCurrentPath();
+                        attractor.load(filePathName);
+                    }
+
+                    ImGuiFileDialog::Instance()->Close();
+                }
+
             }
 
             ImGui::End();

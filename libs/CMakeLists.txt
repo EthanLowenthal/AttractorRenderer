@@ -35,7 +35,6 @@ target_include_directories( IMGUI
                             PUBLIC ${SDL3_DIR}/include
                             )
 
-
 if(USE_GLES OR RASPBIAN)
     target_compile_definitions(IMGUI PUBLIC -DIMGUI_IMPL_OPENGL_ES2)
 

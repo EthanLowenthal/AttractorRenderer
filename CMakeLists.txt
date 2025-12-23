@@ -27,6 +27,8 @@ set(IMGUI_SOURCES
     ${IMGUI_DIR}/backends/imgui_impl_opengl3.cpp
 )
 
+set(STB_DIR "${CMAKE_CURRENT_SOURCE_DIR}/vendor/stb")
+
 # Create executable
 add_executable(${PROJECT_NAME}
     src/main.cpp
@@ -37,6 +39,7 @@ add_executable(${PROJECT_NAME}
 target_include_directories(${PROJECT_NAME} PRIVATE
     ${IMGUI_DIR}
     ${IMGUI_DIR}/backends
+    ${STB_DIR}
 )
 
 # Link libraries

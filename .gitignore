@@ -63,3 +63,5 @@ build/
 *.app
 
 AttractorRenderer
+
+.DS_Store

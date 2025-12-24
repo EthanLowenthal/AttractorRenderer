@@ -25,6 +25,10 @@ set(IMGUI_SOURCES
     ${IMGUI_DIR}/imgui_widgets.cpp
     ${IMGUI_DIR}/backends/imgui_impl_glfw.cpp
     ${IMGUI_DIR}/backends/imgui_impl_opengl3.cpp
+        src/main.cpp
+        src/main.cpp
+        src/image.h
+        src/palette.h
 )
 
 set(STB_DIR "${CMAKE_CURRENT_SOURCE_DIR}/vendor/stb")
@@ -33,6 +37,8 @@ set(STB_DIR "${CMAKE_CURRENT_SOURCE_DIR}/vendor/stb")
 add_executable(${PROJECT_NAME}
     src/main.cpp
     ${IMGUI_SOURCES}
+        src/main.cpp
+        src/palette.h
 )
 
 # Include directories

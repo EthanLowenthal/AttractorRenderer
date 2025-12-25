@@ -25,20 +25,19 @@ set(IMGUI_SOURCES
     ${IMGUI_DIR}/imgui_widgets.cpp
     ${IMGUI_DIR}/backends/imgui_impl_glfw.cpp
     ${IMGUI_DIR}/backends/imgui_impl_opengl3.cpp
-        src/main.cpp
-        src/main.cpp
-        src/image.h
-        src/palette.h
 )
 
 set(STB_DIR "${CMAKE_CURRENT_SOURCE_DIR}/vendor/stb")
+set(PFD_DIR "${CMAKE_CURRENT_SOURCE_DIR}/vendor/portable-file-dialogs")
 
 # Create executable
 add_executable(${PROJECT_NAME}
     src/main.cpp
+    src/palette.h
+    src/image.h
+    src/window.h
+    src/clifford.h
     ${IMGUI_SOURCES}
-        src/main.cpp
-        src/palette.h
 )
 
 # Include directories
@@ -46,6 +45,7 @@ target_include_directories(${PROJECT_NAME} PRIVATE
     ${IMGUI_DIR}
     ${IMGUI_DIR}/backends
     ${STB_DIR}
+    ${PFD_DIR}
 )
 
 # Link libraries

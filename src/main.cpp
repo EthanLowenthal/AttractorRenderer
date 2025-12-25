@@ -7,13 +7,12 @@
 #include "imgui.h"
 #include "imgui_impl_glfw.h"
 #include "imgui_impl_opengl3.h"
+#include "portable-file-dialogs.h"
 #include <GLFW/glfw3.h>
 #include <iostream>
 #include <thread>
 #include <algorithm>
 #include <atomic>
-
-
 
 
 int main(int argc, char* argv[])
@@ -70,32 +69,6 @@ int main(int argc, char* argv[])
                     ImGui::ColorEdit3("Background Color", &attractor.bg_color[0], ImGuiColorEditFlags_NoInputs);
                     ImGui::Text("Palette:");
                     MultiColorSlider("", attractor.palette);
-                    // for (int i = 0; i < attractor.palette.colors.size(); i++) {
-                    //     ImGui::PushID(i);
-                    //     ImGui::ColorEdit3("", &attractor.palette.colors[i].second[0], ImGuiColorEditFlags_NoInputs);
-                    //     ImGui::SameLine();
-                    //     ImGui::SliderFloat("", &attractor.palette.colors[i].first, 0.0f, 1.0f);
-                    //     ImGui::SameLine();
-                    //     if (ImGui::Button("Remove")) {
-                    //         attractor.palette.colors.erase(attractor.palette.colors.begin() + i);
-                    //     }
-                    //     ImGui::PopID();
-                    // }
-                    // if (ImGui::Button("Add Color")) {
-                    //     attractor.palette.addColor(0.5f, 1.0f, 1.0f, 1.0f);
-                    // }
-                    // ImGui::Text("Preview:");
-                    // ImGui::BeginChild("PalettePreview", ImVec2(0, 30), true);
-                    // ImDrawList* draw_list = ImGui::GetWindowDrawList();
-                    // ImVec2 canvas_pos = ImGui::GetCursorScreenPos();
-                    // ImVec2 canvas_size = ImGui::GetContentRegionAvail();
-                    // for (int i = 0; i < canvas_size.x; i++) {
-                    //     float t = i / canvas_size.x;
-                    //     auto color = attractor.palette.getColor(t);
-                    //     ImU32 col = IM_COL32((int)(color[0] * 255), (int)(color[1] * 255), (int)(color[2] * 255), 255);
-                    //     draw_list->AddLine(ImVec2(canvas_pos.x + i, canvas_pos.y), ImVec2(canvas_pos.x + i, canvas_pos.y + canvas_size.y), col);
-                    // }
-                    // ImGui::EndChild();
                 }
 
                 if (ImGui::CollapsingHeader("Other")) {
@@ -112,6 +85,16 @@ int main(int argc, char* argv[])
                 if (ImGui::Button("Update")) {
                     attractor.generate_image();
                 }
+                ImGui::SameLine();
+                if (ImGui::Button("Save")) {
+                    std::thread([&]() {
+                        std::string destination = pfd::save_file("Select a file").result();
+                        if (destination.empty())
+                            return;
+                        // TODO: save file
+                    }).detach();
+                }
+
                 if (progress > 0.0f) {
                     ImGui::ProgressBar(progress, ImVec2(-1.0f, 0.0f));
                 }

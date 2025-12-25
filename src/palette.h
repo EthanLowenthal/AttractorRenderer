@@ -14,14 +14,37 @@ struct Palette {
     ImVector<PaletteHandle*> palette_handles {};
 
     Palette() {
-        addColor(0.1, ImVec4(0.0f, 0.0f, 0.0f, 1.0f));
-        addColor(0.5, ImVec4(1.0f, 0.0f, 0.0f, 1.0f));
+        addColor(0.0, ImVec4(0.0f, 0.0f, 0.0f, 1.0f));
         addColor(1.0, ImVec4(1.0f, 1.0f, 1.0f, 1.0f));
     }
 
     void addColor(float position, ImVec4 color) {
         palette.push_back( { position, color });
         palette_handles.push_back(&palette.back());
+        sort();
+    }
+    void removeColor(PaletteHandle* handle) {
+        if (palette_handles.size() <= 2)
+            return;
+
+        ImVector<PaletteHandle> new_palette {};
+        ImVector<PaletteHandle*> new_palette_handles {};
+
+        for (const PaletteHandle& palette_handle : palette) {
+            if (&palette_handle == handle)
+                continue;
+            PaletteHandle new_handle = palette_handle;
+            new_palette.push_back(new_handle);
+        }
+
+        palette = new_palette;
+
+        for (PaletteHandle& palette_handle : palette) {
+            new_palette_handles.push_back(&palette_handle);
+        }
+
+        palette_handles = new_palette_handles;
+
         sort();
     }
     void sort() {
@@ -61,6 +84,26 @@ bool MultiColorSlider(
     if (window->SkipItems)
         return false;
 
+    static PaletteHandle* moving_handle = palette.palette_handles.front();
+    static PaletteHandle* selected = palette.palette_handles.front();
+
+    if (ImGui::Button("+")) {
+        palette.addColor(0.5, {1, 1, 1, 1});
+    }
+
+    if (selected) {
+        ImGui::SameLine();
+
+        if (ImGui::Button("-")) {
+            palette.removeColor(selected);
+            selected = palette.palette_handles.front();
+            moving_handle = palette.palette_handles.front();
+        }
+    }
+
+    if (selected)
+        ImGui::ColorEdit4("Handle Color", (float*)&selected->color, ImGuiColorEditFlags_NoInputs);
+
     ImGui::PushID(label);
 
     ImVec2 pos = ImGui::GetCursorScreenPos();
@@ -69,7 +112,6 @@ bool MultiColorSlider(
 
     ImGui::InvisibleButton("##slider", size);
     bool changed = false;
-    static PaletteHandle* selected = nullptr;
 
     ImDrawList* draw = ImGui::GetWindowDrawList();
 
@@ -102,13 +144,13 @@ bool MultiColorSlider(
     ImVec2 mouse = ImGui::GetIO().MousePos;
 
     if (!ImGui::IsMouseDown(0))
-        selected = nullptr;
+        moving_handle = nullptr;
 
-    if (selected) {
+    if (moving_handle) {
         float new_t = (mouse.x - bb.Min.x) / (bb.Max.x - bb.Min.x);
 
         if (new_t > 0 && new_t < 1)
-            selected->t = new_t;
+            moving_handle->t = new_t;
 
         changed = true;
     }
@@ -129,8 +171,9 @@ bool MultiColorSlider(
 
         if (hovered && ImGui::IsMouseClicked(0)) {
             ImGui::SetActiveID(window->GetID(i), window);
-            if (selected == nullptr) {
-                selected = palette.palette_handles[i];
+            if (moving_handle == nullptr) {
+                moving_handle = palette.palette_handles[i];
+                selected = moving_handle;
             }
         }
 

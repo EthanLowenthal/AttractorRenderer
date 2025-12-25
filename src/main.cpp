@@ -85,14 +85,20 @@ int main(int argc, char* argv[])
                 if (ImGui::Button("Update")) {
                     attractor.generate_image();
                 }
-                ImGui::SameLine();
-                if (ImGui::Button("Save")) {
-                    std::thread([&]() {
-                        std::string destination = pfd::save_file("Select a file").result();
-                        if (destination.empty())
-                            return;
-                        // TODO: save file
-                    }).detach();
+                if (!attractor.image.empty()) {
+                    ImGui::SameLine();
+                    if (ImGui::Button("Save")) {
+                        std::thread([&]() {
+                            std::string destination = pfd::save_file("Select a file", "").result();
+                            if (destination.empty())
+                                return;
+
+                            if (!destination.ends_with(".png"))
+                                destination += ".png";
+
+                            stbi_write_png(destination.c_str(), attractor.image_width, attractor.image_height, 3, &attractor.image[0], attractor.image_width * 3);
+                        }).detach();
+                    }
                 }
 
                 if (progress > 0.0f) {
@@ -102,13 +108,16 @@ int main(int argc, char* argv[])
                 ImGui::TableSetColumnIndex(1);
 
                 if (attractor.image_texture) {
-                    ImGui::Image((ImTextureID)(intptr_t)attractor.image_texture, ImVec2(attractor.image_width, attractor.image_height));
+                    ImVec2 screenSize = ImGui::GetContentRegionAvail();
+                    float scale = std::min(screenSize.x / attractor.image_width, screenSize.y / attractor.image_height);
+                    float currentCursorPos = ImGui::GetCursorPosX();
+                    ImGui::SetCursorPosX(currentCursorPos + (screenSize.x - attractor.image_width * scale) * 0.5);
+                    ImGui::Image((ImTextureID)(intptr_t)attractor.image_texture, ImVec2(attractor.image_width * scale, attractor.image_height * scale));
                 }
 
                 ImGui::EndTable();
             }
 
-            ImGui::Text("Application average %.3f ms/frame (%.1f FPS)", 1000.0f / io.Framerate, io.Framerate);
             ImGui::End();
         }
 

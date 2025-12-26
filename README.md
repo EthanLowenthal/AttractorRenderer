@@ -1,7 +1,7 @@
 # AttractorRenderer
 
 Renders clifford attractors.
-Written in C++ with SDL-ImGui for the GUI.
+Written in C++ with GLFW-ImGui for the GUI.
 
 <div>
 <img src="./images/beige.png" alt="beige" style="width:400px;"/>
